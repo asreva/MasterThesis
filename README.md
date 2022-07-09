@@ -1,11 +1,10 @@
-# MasterThesis
+# Master Thesis
 Master Thesis (LTS4@EPFL): A multi-modal Deep Learning approach for Myocardial Infarction prediction
 
 ## Summary
-The objective of the framework is to train networks to predict future MI from XCA (X-ray Coronary Angiography) images and patient data. Different strategies have been explored: classical Machine Learning (ANN, Decision Tree, ...) algorithms applied to patient data, CNN applied to XCA images (and patient data) and Transformers applied to XCA (and patient data).
+The objective of the work is to train networks that predict future MI from XCA images (X-ray Coronary Angiography) and patient data. Different strategies have been explored: classical Machine Learning algorithms applied to patient data, CNN applied to XCA images (and patient data) and Transformers applied to XCA (and patient data).
 
 ## Libraries and KuberNets
-Main non-standard libraries needed:
 - Base image on KuberNets: jupyter/datascience-notebook:latest
 - FFCV: https://pypi.org/project/ffcv/ (fast data loading for CNN, comes inside of a conda environment)
 - Scikit-image: https://scikit-image.org/docs/dev/install.html (to deal with images)
@@ -55,7 +54,7 @@ Most of the folders contain similar files:
 6. Wait and grab a coffee
 7. Enjoy the results on the W&B API :)
 
-#### Run a network gird search with cross validatio
+#### Run a network gird search with cross validation
 1. Go to the network of the architecure (for example, patient_info_approach)
 2. Open run_wandb_grid.py
 3. Fill the non-grid searched parameters of the skeleton dictionnary defined in configuration_dict.py and set "nb_cv" to the number of folds in the CV, for example define the number of epochs by changing the value of the "n_epochs" key
