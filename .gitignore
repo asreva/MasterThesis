@@ -4,8 +4,6 @@
 *.beton
 *.pt
 *.png
-*.csv
-*.xlsx
 
 # ignore old
 old/
