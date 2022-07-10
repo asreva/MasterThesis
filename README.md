@@ -99,7 +99,7 @@ The df_patient_names_to_sjid.csv converts the patient name to its SJID identifie
 ### transformer_and_patient_approach
 The interpretability.ipynb implements the interpretability analysis of the network. 
 
-The code in init_net.py is contained in networks.py for the others approaches. In this approach, each network version has its file instead of having them all in networks.py. Some are for interpretability only.
+In this approach, each network version has its file instead of having them all in networks.py. Some are for interpretability only.
 
 ### Final testing
 It contains the testing images and test_data_eval.ipynb that evaluates the networks on this dataset and some other milestones (like the cardiologist).
