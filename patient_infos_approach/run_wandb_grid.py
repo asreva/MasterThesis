@@ -1,5 +1,5 @@
 """
-Aim: run the a grid search (with cross validation) with the W&B API
+Aim: run a grid search (with cross validation) with the W&B API
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -15,13 +15,12 @@ import wandb
 import numpy as np
 
 if __name__ == '__main__':
-
     # Constants and global variables
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == "cuda":
         torch.cuda.empty_cache()
 
-    # --- Train definition --- #
+    # --- Initial skeleton definition --- #
     # Define the non grid search parameters
     train_config = train_configuration_default
     
@@ -46,8 +45,8 @@ if __name__ == '__main__':
     train_config["scheduler_patience"] = 25
     train_config["scheduler_factor"] = 0.1
 
-    # --- Set the w&b and launche this iteration of the train --- #
-
+    # --- Get the grid searched HP from w&b and apply them --- #
+    
     # Get the parameters of the grid from w&b
     train_config_keys = train_config.keys()
     parser = argparse.ArgumentParser()
@@ -69,7 +68,7 @@ if __name__ == '__main__':
     train_config["PESG_gamma"] = float(train_config["PESG_gamma"])
     train_config["PESG_margin"] = float(train_config["PESG_margin"])
 
-    # Run the train and log it
+    # --- Do the training with this HP config --- #
     nb_cv = train_config["nb_cv"]
     all_perf = []
     wandb.init(project="dl_mi_pred_patient", config=train_config)
@@ -78,7 +77,7 @@ if __name__ == '__main__':
         perf = train_valid(train_config, device, cv_split=[i_cv, nb_cv], grid=True)
         all_perf.append(perf)
 
-
+    # --- Log the obtained perf to W&B --- #
     # Sadly we have to wait all the model to have run to compute the mean at each epoch
     # https://towardsdatascience.com/how-i-learned-to-stop-worrying-and-track-my-machine-learning-experiments-d9f2dfe8e4b3
     # https://github.com/wandb/examples/blob/master/examples/wandb-sweeps/sweeps-cross-validation/train-cross-validation.py

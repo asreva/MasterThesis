@@ -50,7 +50,7 @@ class FocalLoss(torch.nn.Module):
 # --- Functions --- #
 def compute_full_loss(pred, lad_pred, lcx_pred, rca_pred, x_lad_pair, x_lcx_pair, x_rca_pair, target, criterion, arteries_prediction_loss_ratio, siamese_prediction_loss_ratio, available_arteries):
     """ 
-        Aim: Compute the full loss of the MiPredArteryLevel Model by summing the global MI loss, the MI at artery level loss and the siamese loss
+        Aim: Compute the full loss of the MiPredArteryLevel Model by summing the global MI loss, the MI at artery level loss and the siamese loss. Handles the missing arteries of the pateitns
         
         Parameters:
             - pred, lad_pred, lcx_pred, rca_pred: global MI prediction and prediction of MI at LAD/LCX/RCA
@@ -75,7 +75,7 @@ def compute_full_loss(pred, lad_pred, lcx_pred, rca_pred, x_lad_pair, x_lcx_pair
     # Compute the artery MI loss es
     loss_arteries_lad, loss_arteries_lcx, loss_arteries_rca = 0, 0, 0
     
-    # Only add the loss when the artery is available (= true prediction)
+    # Only add the loss when the artery is available
     for i_b in range(0, len(available_arteries)):
         if available_arteries[i_b, 0]:
             try:

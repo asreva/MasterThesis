@@ -248,7 +248,7 @@ class Conv2d(nn.Module):
 
 class transformer_network(nn.Module):
     """ 
-        Aim: Get all the patches extracted from an image and extract from it the structure
+        Aim: From a list of patches, apply the TR-Net and returns the list of MI prediction for the patches
         
         Structure:
             - 2D CNN: each patch goes through a CNN feature analysis
@@ -291,14 +291,13 @@ class transformer_network(nn.Module):
     
 class ArteryLevelDNN(nn.Module):
     """ 
-        Aim: Get the analysis at artery level of the two views
+        Aim: Get the MI analysis at artery level of the two views
         
         Structure:
             - Analyse of the two views: the two views go to the transformer_network class
             - Concat: their result is concatenated
-            - Return:   - this result is sent to next level
-                        - the analysis is sent for further siamese comparison
-            - Artery prediction: a prediction is also done at the artery level
+            - Return:   - the MI prediction at artery level is sent to next level
+                        - the features of the two views is sent to the next level for distance loss
     """
     
     def __init__(self, train_configuration, in_channels=1, num_levels=4, f_maps=16, dim_hidden=3456, num_heads=3, dim_head=18,
@@ -311,30 +310,19 @@ class ArteryLevelDNN(nn.Module):
         self.verbose=verbose
 
     def forward(self, img_view1, img_view2):
-        
-        # siamese analysis
-        if self.verbose:
-            print("Shape image 1 {} Shape image 2 {}".format(img_view1.shape, img_view2.shape))
             
         analyse_view1 = self.artery_analyser(img_view1)
         analyse_view2 = self.artery_analyser(img_view2)
         
-        if self.verbose:
-            print("Analysis image 1 {} Analysis image 2 {}".format(analyse_view1.shape, analyse_view2.shape))
-        
         artery_analyse = torch.concat([analyse_view1, analyse_view2], dim=1)
-        
-        if self.verbose:
-            print("Analysis together {}".format(artery_analyse.shape))
 
         artery_pred = torch.max(artery_analyse, dim=1).values
         
-        # return analyse to compute then siamese loss
         return artery_analyse, artery_pred, analyse_view1.detach(), analyse_view2.detach()
     
 class PatientLevelDNN(nn.Module):
     """ 
-        Aim: Get the prediction at the patient level
+        Aim: Get the prediction at the patient level from the list of patches of each view of each artery
         
         Structure:
             - Analyse of the three arteries: the three arteries data go to the ArteryLevelDNN class
@@ -361,25 +349,13 @@ class PatientLevelDNN(nn.Module):
     def forward(self, imgs):
         lad_imgs, lcx_imgs, rca_imgs = imgs
         
-        if self.verbose:
-            print("Shape LAD image view 0 {}".format(lad_imgs[0].shape))
-        
         lad_analysis, lad_pred, res_lad_view1, res_lad_view2 = self.lad_analyser(lad_imgs[0], lad_imgs[1])
         lcx_analysis, lcx_pred, res_lcx_view1, res_lcx_view2 = self.lcx_analyser(lcx_imgs[0], lcx_imgs[1])
         rca_analysis, rca_pred, res_rca_view1, res_rca_view2 = self.rca_analyser(rca_imgs[0], rca_imgs[1])
         
-        if self.verbose:
-            print("Shape LAD anlaysis {}".format(lad_analysis.shape))
-        
         patient_analysis = torch.concat([lad_analysis, lcx_analysis, rca_analysis], dim=1)
         
-        if self.verbose:
-            print("Shape full anlaysis {}".format(patient_analysis.shape))
-        
         pred = torch.max(patient_analysis, dim=1).values
-        
-        if self.verbose:
-            print("Shape output {}".format(pred.shape))
         
         return pred, lad_pred, lcx_pred, rca_pred, \
                     (res_lad_view1, res_lad_view2), (res_lcx_view1, res_lcx_view2), (res_rca_view1, res_rca_view2)
@@ -395,7 +371,7 @@ def init_net(train_configuration):
         Output: the network, the train scheduler, the optimizer
     """
     
-    # Create the network
+    # Create the network or load one
     if train_configuration["load_network"] is None:
         net = train_configuration["network_class"](train_configuration)
     else:
@@ -408,6 +384,7 @@ def init_net(train_configuration):
     optimizer_l = []
     scheduler_l = []
     
+    # For each criterion/loss add it in the list
     for i in range(len(train_configuration["criterion_type"])):
         # Choose criteraion
         if train_configuration["criterion_type"][i] == "BCE":
@@ -447,7 +424,7 @@ def init_net(train_configuration):
             print("Optimizer not found. Exit code (network.py).")
             sys.exit()
 
-    # Apply weights and biases initialisation
+    # Apply weights and biases initialisation if not loading an existing network
     if train_configuration["load_network"] is None:
         if train_configuration["init"] == "Xavier Uniform":
             net.apply(xavier_uniform_init)

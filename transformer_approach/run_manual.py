@@ -12,7 +12,6 @@ import torch
 import wandb
 
 if __name__ == '__main__':
-
     # Constants and global variables
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == "cuda":
@@ -20,11 +19,6 @@ if __name__ == '__main__':
 
     # --- Train definition --- #
     train_config = train_configuration_default
-
-    #train_config["dataset_ratio"] = 0.1
-    
-    #train_config["save_best_net"] = True
-    #train_config["load_network"] = "saved_networks/08052022_160158/4_0.0.pt"
     
     train_config["patch_randomness"] = 0.1
     train_config["patch_size_l"] = [64, 64, 64, 64]
@@ -57,11 +51,6 @@ if __name__ == '__main__':
     train_config["PESG_gamma"] = 500
     train_config["PESG_margin"] = 1.0
     train_config["PESG_imratio"] = 0.5
-    # train_config["Compo_gamma"] = 500
-    # train_config["Compo_margin"] = 1.0
-    # train_config["Compo_imratio"] = 0.5
-    # train_config["Compo_beta1"] = 0.9
-    # train_config["Compo_beta2"] = 0.999
 
     # --- Launch the training and its record --- #
     wandb.init(config=train_config, project="test")

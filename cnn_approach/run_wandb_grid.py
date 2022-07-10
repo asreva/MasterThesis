@@ -1,5 +1,5 @@
 """
-Aim: run the a grid search with the W&B API
+Aim: run a grid search with the W&B API
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -21,10 +21,9 @@ if __name__ == '__main__':
     if device == "cuda":
         torch.cuda.empty_cache()
 
-    # --- Train definition --- #
+    # --- Initial skeleton definition --- #
+    # Define the non grid search parameters
     train_config = train_configuration_default
-
-    #train_config["dataset_ratio"] = 1
     
     train_config["nb_cv"] = 5
 
@@ -46,7 +45,7 @@ if __name__ == '__main__':
     train_config["scheduler_patience"] = 3
     train_config["scheduler_factor"] = 0.1
 
-    # --- Set the w&b and launche this iteration of the train --- #
+    # --- Get the grid searched HP from w&b and apply them --- #
 
     # Get the parameters of the grid from w&b
     train_config_keys = train_config.keys()
@@ -61,7 +60,7 @@ if __name__ == '__main__':
         if arg_value is not None:
             train_config[arg_name] = arg_value
 
-    # Convert strings to float values
+    # Convert strings to float when needed --> has to be adatpted each time
     train_config["dropout"] = float(train_config["dropout"])
     train_config["learning_rate"] = [float(train_config["learning_rate_1"])]
     train_config["weight_decay"] = float(train_config["weight_decay"])
@@ -72,7 +71,7 @@ if __name__ == '__main__':
     train_config["focal_gamma"] = float(train_config["focal_gamma"])
     train_config["focal_reduction"] = train_config["focal_reduction"]
 
-    # Run the train and log it
+    # --- Do the training with this HP config --- #
     nb_cv = train_config["nb_cv"]
     wandb.init(project="dl_mi_pred_CNN", config=train_config)
     all_perf = []
@@ -82,6 +81,7 @@ if __name__ == '__main__':
         all_perf.append(perf)
 
 
+    # --- Log the obtained perf to W&B --- #
     # Sadly we have to wait all the model to have run to compute the mean at each epoch
     # https://towardsdatascience.com/how-i-learned-to-stop-worrying-and-track-my-machine-learning-experiments-d9f2dfe8e4b3
     # https://github.com/wandb/examples/blob/master/examples/wandb-sweeps/sweeps-cross-validation/train-cross-validation.py

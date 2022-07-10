@@ -69,14 +69,6 @@ if __name__ == '__main__':
         "weight_decay": 0.00634788540665404,
         "lr_l": [0.0004493489445028419], # list of the lr
         "SGD_momentum": 0.6566222749612993 , # HP of the SGD
-        # "PESG_gamma": None, # HP of the PSEG
-        # "PESG_margin": None, # HP of the PSEG
-        # "PESG_imratio": None, # HP of the PSEG
-        # "Compo_gamma": None, # HP of the PDSCA
-        # "Compo_margin": None, # HP of the PDSCA
-        # "Compo_imratio": None, # HP of the PDSCA
-        # "Compo_beta1": None, # HP of the PDSCA
-        # "Compo_beta2": None, # HP of the PDSCA
 
         # Define the scheduler
         "scheduler_patience": 5, # nb of epochs without improvement before reducing lr
@@ -87,9 +79,6 @@ if __name__ == '__main__':
         "siamese_pred_loss_ratio": 7.399590987258929e-05, # ratio btw artery MI prediction and global MI prediction losses
         "arteries_pred_loss_ratio": 0.2071422613609661, # ratio btw siamese loss and global MI predicition losses
         "patient_data_loss_ratio": 0.09457471894183037, # ratio btw patient data prediction loss and global MI predicition losses
-        # "focal_alpha": None, # HP of the focal loss
-        # "focal_gamma": None, # HP of the focal loss
-        # "focal_reduction": None, # HP of the focal loss
 
     }
     

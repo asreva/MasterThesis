@@ -57,8 +57,7 @@ def compute_full_loss(pred, lad_pred, lcx_pred, rca_pred, x_lad_pair, x_lcx_pair
             - x_lad_paid, x_lcx_pair, x_rca_pair: output of each siamese block (LAD/LCX/RCA), each block outputs a tupple with output of view 1 and output of view 2
             - target: tensor with the MI state of the patient (global and artery level)
             - criterion: criterion to compute the loss for the MI prediction
-            - arteries_prediction_loss_ratio: ratio btw artery MI prediction and global MI prediction losses
-            - siamese_prediction_loss_ratio: ratio btw siamese loss and global MI predicition losses
+            - train_configruation: configuration of the training, with the ratio between the losses
         
         Output: the MI loss, the MI loss at artery level, the siamese loss
     """

@@ -21,6 +21,7 @@ def execute_one_epoch(net, data_loader, train_configuration, optimizer, criterio
             - data_loader: dataloader to get data
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
             - optimizer: optimizer used to modify weights, if train enabled
+            - criterion: classification loss to use
             - scheduler: scheduler to reduce lr, if train enabled
             - device: device on which the operation take place
             - modify_net: if the network is on train mode or not
@@ -40,7 +41,7 @@ def execute_one_epoch(net, data_loader, train_configuration, optimizer, criterio
     else:
         net.eval()
     
-    #1# before_data_loader = time()
+    # For each batch
     for batch_idx, (data, target) in enumerate(data_loader):
 
         data, target = data.to(device), target.to(device)
@@ -59,6 +60,7 @@ def execute_one_epoch(net, data_loader, train_configuration, optimizer, criterio
         loss_siam_total = loss_siam[0] + loss_siam[1] + loss_siam[2]
         loss = loss_crit + loss_arteries_total +  loss_siam_total
         
+        # If training, modify the weights
         if modify_net:
             if train_configuration["optimizer_type"] == "PESG":
                 loss.backward(retain_graph=True)
@@ -66,7 +68,8 @@ def execute_one_epoch(net, data_loader, train_configuration, optimizer, criterio
                 loss.backward()
             optimizer.step()
         
-        loss_crit_acc += loss_crit.data.detach() # make sure that we take data to not accumulate gradient in this operation
+        # make sure that we take data to not accumulate gradient in this operation
+        loss_crit_acc += loss_crit.data.detach()
         loss_arteries_acc += loss_arteries_total.data.detach()
         loss_siam_acc += loss_siam_total.data.detach()
         loss_acc += loss.data.detach()
@@ -99,6 +102,7 @@ def execute_one_epoch(net, data_loader, train_configuration, optimizer, criterio
     else:
         postfix = ""
     
+    # Create a dict of the losses and metrics at this epoch
     loss_dict = {}
     loss_dict["mi_loss"+postfix] = loss_crit_acc
     loss_dict["mi_artery_loss"+postfix] = loss_arteries_acc

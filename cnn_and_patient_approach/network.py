@@ -1,5 +1,5 @@
 """
-Aim: Implement the network for the MI prediction at patient level (based on artery blocks)
+Aim: Implement the network for the MI prediction from artery images and patient data with CNN
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -13,6 +13,14 @@ from loss import FocalLoss
 
 # --- Functions --- #
 def count_parameters(model):
+    """ 
+        Aim: Returns the number of trainable parameters
+        
+        Parameters:
+            - model: the model
+            
+        Output: the number of parameters
+    """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def xavier_uniform_init(m):
@@ -167,6 +175,7 @@ class SiameseArteryAnalysis_Or_patient(torch.nn.Module):
                 - Parameters: 
                     - x1: view 1 of the artery (image+mask)
                     - x2: view 2 of the artery (image+mask)
+                    - x_patient: the features extracted from the patient data
                 - Output: x1 (feature extraction of view 1), x2 (feature extraction of view2), pred (MI prediction in this artery)
     """
     
@@ -219,10 +228,12 @@ class MiPredArteryLevel_Or_with_patient(torch.nn.Module):
         
             - Forward: analyse the image
                 - Parameters: 
-                    - x: full input
+                    - x: full images input
+                    - x_patient: the patient information
                 - Output: 
                     - pred, lad_pred, lcx_pred, rca_pred: global MI prediction and prediction of MI at LAD/LCX/RCA
                     - x_lad_paid, x_lcx_pair, x_rca_pair: output of each siamese block (LAD/LCX/RCA), each block outputs a tupple with output of view 1 and output of view 2 --> will be used to compute siamese loss
+                    - patient_pred: the prediction from patient data
     """
 
     def __init__(self, train_config):
@@ -257,12 +268,13 @@ class MiPredArteryLevel_Or_with_patient(torch.nn.Module):
         pred = pred.max(dim=1).values # max return values and indices
         
         return pred, lad_pred, lcx_pred, rca_pred, \
-                (x_lad_1, x_lad_2), (x_lcx_1, x_lcx_2), (x_rca_1, x_rca_2), patient_pred
+                (x_lad_1, x_lad_2), (x_lcx_1, x_lcx_2), (x_rca_1, x_rca_2), \
+                patient_pred
 
     
 def load_state_dict_pretrained_to_net(self, state_dict):
     """
-        Aim: apply a state dict to a network (and handle impossible match)
+        Aim: apply a state dict to a network (while handling impossible match)
              from https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113
     """
  
@@ -289,7 +301,7 @@ def init_net(train_configuration):
         Output: the network, the train scheduler, the optimizer
     """
     
-    # Create the network
+    # Create the network or load one
     if train_configuration["load_network"] is None:
         net = train_configuration["network_class"](train_configuration)
     else:
@@ -317,6 +329,7 @@ def init_net(train_configuration):
     optimizer_l = []
     scheduler_l = []
     
+    # For each criterion/loss add it in the list
     for i in range(len(train_configuration["criterion_type"])):
         # Choose criteraion
         if train_configuration["criterion_type"][i] == "BCE":
@@ -348,8 +361,8 @@ def init_net(train_configuration):
             print("Optimizer not found. Exit code (network.py).")
             sys.exit()
     
+    # Apply weights and biases initialisation if not loading an existing network
     if train_configuration["load_network"] is None:
-        # Apply weights and biases initialisation
         if train_configuration["init"] == "Xavier Uniform":
             net.apply(xavier_uniform_init)
         elif train_configuration["init"] == "Xavier Normal":
@@ -361,7 +374,8 @@ def init_net(train_configuration):
         else:
             print("Unknown Initialisation")
             sys.exit()
-
+        
+        # patient net may be initialised with another approach
         if train_configuration["init_patient"] == "Xavier Uniform":
             net.patient_net.apply(xavier_uniform_init)
         elif train_configuration["init_patient"] == "Xavier Normal":

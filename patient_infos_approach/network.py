@@ -1,5 +1,5 @@
 """
-Aim: Implement the network for the MI prediction from patient level
+Aim: Implement the network for the MI prediction from patient data
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -177,10 +177,10 @@ def init_net(train_configuration):
         Parameters:
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
         
-        Output: the network, the list of losses, the list of optimiser, the lsit of scheduler
+        Output: the network, the list of losses, the list of optimisers, the list of schedulers
     """
     
-    # Create the network and load one if needed
+    # Create the network or load one
     if train_configuration["load_network"] is None:
         net = train_configuration["network_class"](train_configuration)
     else:
@@ -193,7 +193,7 @@ def init_net(train_configuration):
     optimizer_l = []
     scheduler_l = []
     
-    # For each criterion/loss in the list
+    # For each criterion/loss add it in the list
     for i in range(len(train_configuration["criterion_type"])):
         # Choose criteraion
         if train_configuration["criterion_type"][i] == "BCE":
@@ -210,17 +210,14 @@ def init_net(train_configuration):
         if train_configuration["optimizer_type"][i] == "SGD":
             optimizer_l.append(torch.optim.SGD(net.parameters(), lr=train_configuration["learning_rate"][i], weight_decay=train_configuration["weight_decay"], momentum=train_configuration["SGD_momentum"]))
             scheduler_l.append(torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer_l[i], mode='min', factor=train_configuration["scheduler_factor"], patience=train_configuration["scheduler_patience"], verbose=True))
-
         elif train_configuration["optimizer_type"][i] == "Adam":
             optimizer_l.append(torch.optim.Adam(net.parameters(), lr=train_configuration["learning_rate"][i], weight_decay=train_configuration["weight_decay"]))
             scheduler_l.append(None) # no scheduler for adam
-
         elif train_configuration["optimizer_type"][i] == "PESG":
             # imratio is percentage of positive cases, gamma and margin from their example
             optimizer_l.append(PESG(net, lr=train_configuration["learning_rate"][i], weight_decay=train_configuration["weight_decay"],
                              a=criterion_l[i].a, b=criterion_l[i].b, alpha=criterion_l[i].alpha, imratio=train_configuration["PESG_imratio"], gamma=train_configuration["PESG_gamma"], margin=train_configuration["PESG_margin"]))
             scheduler_l.append(torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer_l[i], mode='min', factor=train_configuration["scheduler_factor"], patience=train_configuration["scheduler_patience"], verbose=True))
-
         else:
             print("Optimizer not found. Exit code (network.py).")
             sys.exit()

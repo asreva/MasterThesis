@@ -1,5 +1,5 @@
 """
-Aim: run the a cross validation search with the W&B API
+Aim: run a cross validation search with the W&B API
 Author: Ivan-Daniel Sievering
 """
 

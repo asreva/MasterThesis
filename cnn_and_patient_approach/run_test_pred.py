@@ -1,8 +1,9 @@
 """
-Aim: Apply a given network to a dataset to evaluate its performance
+Aim: Apply a given CNN and patient data network to a dataset to evaluate its performance
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
+# --- Libraries --- #
 import os 
 import pickle as pkl
 import torch
@@ -16,11 +17,13 @@ from configuration_dict import train_configuration_default
 from network import MiPredArteryLevel_Or_with_patient, load_state_dict_pretrained_to_net
 from datasets import NormalisePatientDate
 
+# --- Constants and parameters --- #
 PATH_TO_NETWORK = "saved_networks/best_cnn_and_pat.pt"
 PATH_TO_DATA_TEST = 'beton_files/test_data.beton'
 PATH_TO_DATA_TRAIN = 'beton_files/train_valid_data.beton'
 PRED_ON = PATH_TO_DATA_TEST
 
+# --- Model definition --- #
 train_config = train_configuration_default
 
 train_config["load_network"] = ["saved_networks/best_cnn_and_pat.pt"]
@@ -44,6 +47,10 @@ train_config["dropout"] = 0.1918385192596236
 train_config["dropout_patient_net"] = 0.3375476811147977 
 train_config["nb_neur_per_hidden_layer_patient"] = [50, 10]
 
+net = MiPredArteryLevel_Or_with_patient(train_config).cuda()
+load_state_dict_pretrained_to_net(net, torch.load(PATH_TO_NETWORK))
+
+# --- Dataset definition --- #
 data_loader_test = Loader(PRED_ON,
     batch_size=1,
     num_workers=os.cpu_count(),
@@ -57,9 +64,7 @@ data_loader_test = Loader(PRED_ON,
     recompile=True
 )
 
-net = MiPredArteryLevel_Or_with_patient(train_config).cuda()
-load_state_dict_pretrained_to_net(net, torch.load(PATH_TO_NETWORK))
-
+# --- Evaluate the model on the dataset --- #
 y, y_pred = [], []
 y_lad, y_lad_pred = [], []
 y_lcx, y_lcx_pred = [], []
@@ -82,7 +87,8 @@ for idx, (data, patient_data, target) in enumerate(data_loader_test):
     
     del data, patient_data, target
     torch.cuda.empty_cache()
-        
+
+# --- Save the performance and labels --- #
 with open('test/y_train.pkl', 'wb') as f:
     pkl.dump(y, f)
     

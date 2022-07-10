@@ -1,5 +1,5 @@
 """
-Aim: run the a cross validation with the W&B API
+Aim: run a cross validation with the W&B API
 Author: Ivan-Daniel Sievering
 """
 
@@ -21,8 +21,6 @@ if __name__ == '__main__':
     
     # --- Train definition --- #
     train_config = train_configuration_default
-
-    #train_config["dataset_ratio"] = 0.1
     
     train_config["save_net"] = True
     

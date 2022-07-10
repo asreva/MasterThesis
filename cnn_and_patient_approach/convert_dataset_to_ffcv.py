@@ -27,7 +27,7 @@ if device == "cuda":
 # --- Classes --- #
 class PatientImageDataset():
     """
-    Aim: creates a dataset with the CNN images and the patient data
+    Aim: creates a dataset with the CNN images and the patient data to then convert to FFCV
                 
     """
     
@@ -44,6 +44,7 @@ class PatientImageDataset():
         self.patient_sjid = df["sjid"]
         
         self.other_patient_data = df.copy().reset_index()
+        # only take the meaningful columns
         self.other_patient_data = self.other_patient_data[['sex', 'age', 'bmi', 'diabetes_hist', 'smoking_bln', 'hypertension_hist', 'cholesterolemia_hist', 'prev_CVD', 'eGFR_bln', 'resuscitation', 'chf_code_proc']]
         
     def __len__(self):

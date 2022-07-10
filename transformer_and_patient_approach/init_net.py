@@ -140,6 +140,7 @@ def init_net(train_configuration):
             print("Optimizer not found. Exit code (network.py).")
             sys.exit()
 
+    # Apply weights and biases initialisation if not loading an existing network
     if train_configuration["load_network"] is None:
         # Apply weights and biases initialisation
         if train_configuration["weights_init"] == "Xavier Uniform":

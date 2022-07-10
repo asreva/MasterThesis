@@ -12,7 +12,6 @@ import torch
 import wandb
 
 if __name__ == '__main__':
-
     # Constants and global variables
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == "cuda":
@@ -20,16 +19,13 @@ if __name__ == '__main__':
 
     # --- Train definition --- #
     train_config = train_configuration_default
-
-    #train_config["dataset_ratio"] = 0.1
     
     train_config["save_best_net"] = True
-    #train_config["load_network"] = None
 
     train_config["nb_neur_per_hidden_layer"] = [50, 10]
     train_config["batch_norm"] = True
     
-    train_config["balance_method"] = "oversample"
+    train_config["balance_method"] = "undersample"
     train_config["patient_normalisation"] = True
 
     train_config["network_class"] = PatientNet
@@ -41,7 +37,7 @@ if __name__ == '__main__':
     train_config["PESG_imratio"] = 0.5
     train_config["SGD_momentum"] = 0.2649568158735824
 
-    train_config["n_epochs"] = 500
+    train_config["n_epochs"] = 2
     train_config["batch_size"] = 32
     train_config["optimizer_type"] = ["SGD", "PESG"]
     train_config["change_opti_and_crit_epochs"] = [-1, 200]

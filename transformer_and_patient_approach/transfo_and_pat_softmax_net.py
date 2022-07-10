@@ -1,7 +1,6 @@
 """
-Aim: Implement the network for the MI prediction at patient level based on a transformer structure and list of patches with patient data
+Aim: Implement the network for the MI prediction at patient level based on a transformer structure and list of patches with patient data added at the softmax level
 Architecture adapted from https://github.com/XinghuaMa/TRNet/tree/main/method
-Patient data added at the softmax level
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -190,7 +189,7 @@ class transformer_network_patient(nn.Module):
         Structure:
             - 2D CNN: each patch goes through a CNN feature analysis
             - Transformer: all the patches go to a transformer structure
-            - Softmax classifier: the result of the transformer is converted to classification at each patch level
+            - Softmax classifier: the result of the transformer is converted to classification at each patch level, patient features are added at this level
     """
 
     def __init__(self, train_configuration, in_channels=1, num_levels=4, f_maps=16, dim_hidden=3456, num_heads=3, dim_head=18,

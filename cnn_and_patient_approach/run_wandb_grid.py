@@ -1,5 +1,5 @@
 """
-Aim: run the a grid search with the W&B API
+Aim: run a grid search with the W&B API
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -21,12 +21,11 @@ if __name__ == '__main__':
     if device == "cuda":
         torch.cuda.empty_cache()
 
-    # --- Train definition --- #
+    # --- Initial skeleton definition --- #
+    # Define the non grid search parameters
     train_config = train_configuration_default
 
     train_config["load_network"] = ["saved_networks/best_cnn_network.pt", "saved_networks/best_ann_patient.pt"]
-    
-    #train_config["dataset_ratio"] = 1
     
     train_config["nb_cv"] = 5
 
@@ -48,25 +47,14 @@ if __name__ == '__main__':
     train_config["change_opti_and_crit_epochs"] = [-1]
     train_config["optimizer_type"] = ["PESG"]
     train_config["criterion_type"] = ["AUC"]
-    #train_config["learning_rate"] = [0.1]
     train_config["scheduler_patience"] = 3
     train_config["scheduler_factor"] = 0.1
     
-    #train_config["PESG_gamma"] = 0.0
-    #train_config["PESG_margin"] = 0.0
     train_config["PESG_imratio"] = 0.5
     
-    #train_config["dropout"] = 0.2
-    #train_config["dropout_patient_net"] = 0.4
     train_config["nb_neur_per_hidden_layer_patient"] = [50, 10]
 
-    #train_config["siamese_prediction_loss_ratio"] = 0.01
-    #train_config["arteries_prediction_loss_ratio"] = 0.0001
-    #train_config["pred_from_patient_data_loss_ratio"] = 0.01
-    
-    #train_config["weight_decay"] = 0.0001
-
-    # --- Set the w&b and launche this iteration of the train --- #
+    # --- Get the grid searched HP from w&b and apply them --- #
 
     # Get the parameters of the grid from w&b
     train_config_keys = train_config.keys()
@@ -81,7 +69,7 @@ if __name__ == '__main__':
         if arg_value is not None:
             train_config[arg_name] = arg_value
 
-    # Convert strings to float values
+    # Convert strings to float when needed --> has to be adatpted each time
     train_config["learning_rate"] = [float(train_config["learning_rate_1"])]
     train_config["PESG_gamma"] = float(train_config["PESG_gamma"])
     train_config["PESG_margin"] = float(train_config["PESG_margin"])
@@ -92,7 +80,7 @@ if __name__ == '__main__':
     train_config["pred_from_patient_data_loss_ratio"] = float(train_config["pred_from_patient_data_loss_ratio"])
     train_config["weight_decay"] = float(train_config["weight_decay"])
 
-    # Run the train and log it
+    # --- Do the training with this HP config --- #
     nb_cv = train_config["nb_cv"]
     wandb.init(project="dl_mi_pred_CNN", config=train_config)
     all_perf = []
@@ -101,7 +89,8 @@ if __name__ == '__main__':
         perf = train_valid(train_config, device, cv_split=[i_cv, nb_cv], grid=True)
         all_perf.append(perf)
 
-
+    
+    # --- Log the obtained perf to W&B --- #
     # Sadly we have to wait all the model to have run to compute the mean at each epoch
     # https://towardsdatascience.com/how-i-learned-to-stop-worrying-and-track-my-machine-learning-experiments-d9f2dfe8e4b3
     # https://github.com/wandb/examples/blob/master/examples/wandb-sweeps/sweeps-cross-validation/train-cross-validation.py

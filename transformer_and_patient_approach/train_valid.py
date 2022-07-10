@@ -24,7 +24,7 @@ def train_valid(train_configuration, device, cv_split=None, grid=False):
         Parameters:
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
             - device: device on which the operations will take place
-            - cv_split: if the train-valid is not part of a crossCV validation use None, else indicates to which step (i.e. 0/1/...) of the CV the process is
+            - cv_split: None to use the whole data else we are doing k fold crossvalidation and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
             - grid: if we are doing a grid or not, in case of a grid do not log directly the value to WANB API but accumulate it and then return in order to compute means over various iterations
     """
     

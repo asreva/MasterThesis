@@ -1,5 +1,5 @@
 """
-Aim: Implement the datasetloader for the MI prediction from CNN images and patient data
+Aim: Implement the dataset loader for the MI prediction from CNN images and patient data
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -120,7 +120,19 @@ class ExtendPatientImages(torch.nn.Module):
     
 class NormalisePatientDate(torch.nn.Module):
     """
-    Aim: normalise the patient data 
+        Aim: Implement a class to apply the dataset extensionon the patient data
+
+        Functions:
+            - Init: initialise the data extender
+                - Parameters:
+                    - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
+
+            - forward: modify the batch of patient iamges
+                - Parameters:
+                    - patient_data: the patient data
+                - Output
+                    - patient_data: the extended patient data
+
     """
     
     def __init__(self, normalise_patient):
@@ -145,7 +157,7 @@ def get_data_loaders(train_configuration, cv_split):
         
         Parameters:
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
-            - cv_split: if the train-valid is not part of a crossCV validation use None, else indicates to which step (i.e. 0/1/...) of the CV the process is
+            - cv_split: None to use the whole data else we are doing k fold crossvalidation and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
             
         Output:
             - (train_data_loader, valid_data_loader): training and validation dataset
@@ -157,8 +169,6 @@ def get_data_loaders(train_configuration, cv_split):
     ffcv_path = PATH_TO_DATA+".beton"
     ffcv_path_train = PATH_TO_DATA+".beton"
     trainvalid_indices = np.arange(0, len(train_valid_df)) # FFCV only accept indices and not keys
-    
-    
     print("{} train-valid data".format(len(trainvalid_indices)))
     
     # Extract train and valid dataset
@@ -197,6 +207,7 @@ def get_data_loaders(train_configuration, cv_split):
         valid_df = train_valid_df.drop(train_df.index)
         valid_df_mi = valid_df[valid_df["patient_mi"]==1].sample(frac=1)
         valid_df = valid_df.sample(int(len(train_valid_df)*train_configuration["train_test_ratio"]))
+        
         # Force at least one patient with MI
         if len(valid_df[valid_df["patient_mi"]==1]) == 0:
             valid_df.iloc[0] = valid_df_mi.iloc[0]
@@ -227,13 +238,6 @@ def get_data_loaders(train_configuration, cv_split):
             valid_indices = test_df.index
         else:
             valid_indices = None
-
-    # Extract part of it to make tests
-    if train_configuration["dataset_ratio"] < 1:
-        _, train_indices = train_test_split(train_indices, test_size=train_configuration["dataset_ratio"]) 
-        _, valid_indices = train_test_split(valid_indices, test_size=train_configuration["dataset_ratio"]) 
-        _, valid_df = train_test_split(valid_df, test_size=train_configuration["dataset_ratio"]) 
-        _, train_df = train_test_split(train_df, test_size=train_configuration["dataset_ratio"]) 
     
         print("Nb of common patients between valid and train is {}".format(len(list(set(train_df["patient_name"]) & set(valid_df["patient_name"])))))
     
@@ -247,11 +251,11 @@ def get_data_loaders(train_configuration, cv_split):
         ffcv_path_valid = ffcv_path
         
     # Get dataloader from the dataset
-    train_data_loader = Loader(ffcv_path_train,
+    train_data_loader = Loader(ffcv_path_train, # depending on the sampling approach, take another .beton file
                 batch_size=train_configuration["batch_size"],
                 num_workers=os.cpu_count(),
                 order=OrderOption.QUASI_RANDOM,
-                indices=train_indices,
+                indices=train_indices, # depending on the sampling approach, take less or more data
                 pipelines={
                   'images': [NDArrayDecoder(), ToTensor(), ExtendPatientImages(train_configuration, False), ToDevice(device, non_blocking=True)],
                   'patient_data': [NDArrayDecoder(), ToTensor(), NormalisePatientDate(train_configuration["normalise_patient"]), ToDevice(device, non_blocking=True)],
@@ -261,7 +265,7 @@ def get_data_loaders(train_configuration, cv_split):
                 recompile=True
                 )
     
-    valid_data_loader = Loader(ffcv_path_valid,
+    valid_data_loader = Loader(ffcv_path_valid, # depending on the sampling approach, take another .beton file
                 batch_size=train_configuration["batch_size"],
                 num_workers=os.cpu_count(),
                 order=OrderOption.QUASI_RANDOM,
@@ -270,7 +274,7 @@ def get_data_loaders(train_configuration, cv_split):
                   'patient_data': [NDArrayDecoder(), ToTensor(), NormalisePatientDate(train_configuration["normalise_patient"]), ToDevice(device, non_blocking=True)],
                   'label': [BytesDecoder(), ToTensor(), ToDevice(device, non_blocking=True)]
                 },    
-                indices=valid_indices,
+                indices=valid_indices, # depending on the sampling approach, take less or more data
                 batches_ahead=10,
                 recompile=True
                               )

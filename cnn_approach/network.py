@@ -13,6 +13,14 @@ from loss import FocalLoss
 
 # --- Functions --- #
 def count_parameters(model):
+    """ 
+        Aim: Returns the number of trainable parameters
+        
+        Parameters:
+            - model: the model
+            
+        Output: the number of parameters
+    """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def xavier_uniform_init(m):
@@ -355,6 +363,7 @@ def init_net(train_configuration):
     optimizer_l = []
     scheduler_l = []
     
+    # For each criterion/loss add it in the list
     for i in range(len(train_configuration["criterion_type"])):
         # Choose criteraion
         if train_configuration["criterion_type"][i] == "BCE":

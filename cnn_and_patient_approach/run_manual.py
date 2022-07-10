@@ -25,7 +25,6 @@ if __name__ == '__main__':
     
     train_config["test"] = False
     train_config["save_best_net"] = True
-    #train_config["load_network"] = ["saved_networks/best_cnn_network.pt", "saved_networks/best_ann_patient.pt"]
 
     train_config["balance_method"] = "undersample"
     train_config["gaussian_blur"] = None

@@ -23,8 +23,8 @@ def train_valid(train_configuration, device, cv_split=None, grid=False):
         Parameters:
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
             - device: device on which the operation take place
-            - cv_split: if the train-valid is not part of a crossCV validation use None, else indicates to which step (i.e. 0/1/...) of the CV the process is
-            - grid: if we are doing a grid or not, in case of a grid do not log directly the value but accumulate it and then return in order to compute means over various iterations
+            - cv_split: None to use the whole data else we are doing k fold crossvalidation and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
+            - grid: if we are doing a grid or not, in case of a grid do not log directly the value but accumulate it and then return in order to compute means over various iterations of the same HPs
     """
     
     # Create network
@@ -38,11 +38,11 @@ def train_valid(train_configuration, device, cv_split=None, grid=False):
     if grid:
         perf_accumulation = []
         
-    # Take first set of training
+    # Take first set of training operators
+    current_config = 0
     criterion = criterion_l[0]
     scheduler = scheduler_l[0]
     optimizer = optimizer_l[0]
-    current_config = 0
     
     # Create folder to save the networks
     if train_configuration["save_best_net"]:
@@ -72,7 +72,7 @@ def train_valid(train_configuration, device, cv_split=None, grid=False):
                                             modify_net=False)
         valid_end_time = time()
 
-        # Log and alccumulate the performances
+        # Print, log and alccumulate the performances
         print("\nEpoch {}/{}:".format(epoch, train_configuration["n_epochs"]-1))
         print("Train duration: {:.2f}s | Valid duration: {:.2f}s".format(train_end_time-train_start_time, valid_end_time-valid_start_time))
         print("Train loss {:.2f} | Valid loss {:.2f}".format(train_perf_dict["total_loss"].item(), valid_perf_dict["total_loss_valid"].item()))
@@ -86,6 +86,7 @@ def train_valid(train_configuration, device, cv_split=None, grid=False):
         else:
             perf_accumulation.append(train_perf_dict)
             
+        # Save the network (if better than previously)
         if train_configuration["save_best_net"]:
             if best_valid_f1 < valid_perf_dict["f1_valid"] or epoch == train_configuration["n_epochs"]-1:
                 best_valid_f1 = valid_perf_dict["f1_valid"]

@@ -42,6 +42,7 @@ def extract_patches(img, img_mask, patch_size, nb_patch, rnd=0, test=False):
             - patch_size: the size of the patch to extract (L)
             - nb_patch: the number of patches to extract on the box (N)
             - rnd: the probability to extract a box not on the centerline
+            - test: if we are dealing with the testing dataset, fixed seed
         
         Output: all the extracted patches (NxLxL)
     """

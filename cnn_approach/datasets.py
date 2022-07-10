@@ -28,7 +28,7 @@ PATH_TO_DATA_OVERSAMPLED = 'data/train_valid_data_oversampled'
 # --- Classes --- #
 class ExtendPatientImages(torch.nn.Module):
     """
-        Aim: Implement a class to apply the dataset extension on the images. Needed to be implemented into FFCV. Works per BATCH. 
+        Aim: Implement a class to apply the dataset extension on the images. Needed to be implemented as a class for FFCV. Works per BATCH. 
              Same modifiction are applied to image and its mask
 
         Functions:
@@ -124,7 +124,7 @@ def get_data_loaders(train_configuration, cv_split):
         
         Parameters:
             - train_configuration: dictionnary defining the parameters of the run (see configuration_dict.py)
-            - cv_split: if the train-valid is not part of a crossCV validation use None, else indicates to which step (i.e. 0/1/...) of the CV the process is
+            - cv_split: None to use the whole data else we are doing k fold crossvalidation and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
             
         Output:
             - (train_data_loader, valid_data_loader): training and validation dataset
@@ -138,7 +138,7 @@ def get_data_loaders(train_configuration, cv_split):
     
     print("{} train-valid data".format(len(trainvalid_indices)))
     
-    # Extract train and valid dataset
+    # Extract train and valid dataset and apply the sampling approach
     if train_configuration["balance_method"] == "no":
         if cv_split is None:
             train_indices, valid_indices = train_test_split(trainvalid_indices, test_size=train_configuration["train_test_ratio"])
@@ -174,6 +174,7 @@ def get_data_loaders(train_configuration, cv_split):
         valid_df = train_valid_df.drop(train_df.index)
         valid_df_mi = valid_df[valid_df["patient_mi"]==1].sample(frac=1)
         valid_df = valid_df.sample(int(len(train_valid_df)*train_configuration["train_test_ratio"]))
+        
         # Force at least one patient with MI
         if len(valid_df[valid_df["patient_mi"]==1]) == 0:
             valid_df.iloc[0] = valid_df_mi.iloc[0]
@@ -204,12 +205,12 @@ def get_data_loaders(train_configuration, cv_split):
     print("{} MI in validation.".format(sum(valid_df["patient_mi"])))
     print("{} MI in train.".format(sum(train_df["patient_mi"])))
         
-    # Get dataloader from the dataset
-    train_data_loader = Loader(ffcv_path_train,
+    # Create dataloader from the dataset
+    train_data_loader = Loader(ffcv_path_train, # depending on the sampling approach, take another .beton file
                 batch_size=train_configuration["batch_size"],
                 num_workers=os.cpu_count(),
                 order=OrderOption.QUASI_RANDOM,
-                indices=train_indices,
+                indices=train_indices, # depending on the sampling approach, take less or more data
                 pipelines={
                   'images': [NDArrayDecoder(), ToTensor(), ExtendPatientImages(train_configuration, False), ToDevice(device, non_blocking=True)],
                   'label': [BytesDecoder(), ToTensor(), ToDevice(device, non_blocking=True)]
@@ -226,7 +227,7 @@ def get_data_loaders(train_configuration, cv_split):
                   'images': [NDArrayDecoder(), ToTensor(), ExtendPatientImages(train_configuration, True), ToDevice(device, non_blocking=True)],
                   'label': [BytesDecoder(), ToTensor(), ToDevice(device, non_blocking=True)]
                 },    
-                indices=valid_indices,
+                indices=valid_indices, # depending on the sampling approach, take less or more data
                 batches_ahead=10,
                 recompile=True
     )

@@ -1,5 +1,5 @@
 """
-Aim: Implement the datasetloader for the MI prediction from patient data
+Aim: Implement the dataset loader for the MI prediction from patient data
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -25,19 +25,20 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # --- Classes --- #
 class PatientDataset():
     """ 
-    Aim: Define a PyTorch dataset class from the features and labels
+    Aim: Define a PyTorch dataset class to get the information and labels of patients
     
     Parameters of constructor:
         - df: dataframe of the dataset
         - train_configuration: global structure that defines the training (see configuration_dict.py)
         - test: if the data is the training or testing data
-        - train_data_info: if testing data and using normalisation, provide the means and std of the training data to normalise
+        - train_data_info: if testing data and using normalisation, provide the means and std of the training data to apply normalisation
     """
     
     def __init__(self, df, train_configuration, test, train_data_info=None):
         self.df = df
         
-        if test==False: # if training data, save the std and mean of columns to apply normalisation on testing data
+        # if training data, save the std and mean of columns to apply normalisation on testing data
+        if test==False: 
             age_mean, age_std = df["age"].mean(), df["age"].std()
             bmi_mean, bmi_std = df["bmi"].mean(), df["bmi"].std()
             eGFR_bln_mean, eGFR_bln_std = df["eGFR_bln"].mean(), df["eGFR_bln"].std()
@@ -45,12 +46,14 @@ class PatientDataset():
             # save train info for testing dataset
             self.patient_data_info = [[age_mean, age_std],[bmi_mean, bmi_std],[eGFR_bln_mean, eGFR_bln_std]]
             
-        elif test and train_configuration["patient_normalisation"]: # if testing data and normalisation enabled, load the train mean and std
+        # if testing data and normalisation enabled, load the train mean and std
+        elif test and train_configuration["patient_normalisation"]: 
             age_mean, age_std = train_data_info[0]
             bmi_mean, bmi_std = train_data_info[1]
             eGFR_bln_mean, eGFR_bln_std = train_data_info[2]
         
-        if train_configuration["patient_normalisation"]: # normalise the dataset
+        # normalise the dataset
+        if train_configuration["patient_normalisation"]: 
             df["age"] = (df["age"]-age_mean)/age_std
             df["bmi"] = (df["bmi"]-bmi_mean)/bmi_std
             df["eGFR_bln"] = (df["eGFR_bln"]-eGFR_bln_mean)/eGFR_bln_std
@@ -76,8 +79,7 @@ def get_data_loaders(train_configuration, cv_split):
     
     Parameters of constructor:
         - train_configuration: global structure that defines the training (see configuration_dict.py)
-        - cv_split: None to use the whole data else we are doing k fold crossvalidation
-                    and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
+        - cv_split: None to use the whole data else we are doing k fold crossvalidation and receive [idx, k] where idx is the idx of the current kfold and k the nb of folds
                     
     Output: training and validation dataloaders
     """

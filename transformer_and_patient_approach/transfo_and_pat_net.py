@@ -1,7 +1,6 @@
 """
-Aim: Implement the network for the MI prediction at patient level based on a transformer structure and list of patches with patient data
+Aim: Implement the network for the MI prediction at patient level based on a transformer structure and list of patches with patient data at the flattening and order embedding level
 Architecture adapted from https://github.com/XinghuaMa/TRNet/tree/main/method
-Patient data added at the flattening level
 Author: Ivan-Daniel Sievering for the LTS4 Lab (EPFL)
 """
 
@@ -90,6 +89,10 @@ class transformer_block(nn.Module):
 
 
 class Transformer_Structure_PatientData(nn.Module):
+    """
+    Patient data is added at this level, before order embedding
+    """
+    
     def __init__(self, dim_seq=3456, num_heads=3, dim_head=18, num_encoders=8, num_regions=4):
         super().__init__()
 
