@@ -110,5 +110,4 @@ It contains the testing images and test_data_eval.ipynb that evaluates the netwo
 - The results are available on W&B API: https://wandb.ai/asreva/dl_mi_pred_patient, https://wandb.ai/asreva/dl_mi_pred_CNN and https://wandb.ai/asreva/dl_mi_pred_transformers
 - All the references, results and analysis are available in the report (MasterProject_report.pdf)
 - The last Master Thesis working on this challenge is available at: https://github.com/Vuillecard/CVD_predicition
-- In the "others" folder you can find the definition of the Docker pod used in "pod_gpu.yaml" with the credentials "secrets.yaml". You need to change with your identifier and password
 - For remarks or comments, you can send me an email at ivan-daniel.sievering@outlook.com
